@@ -21,7 +21,8 @@ const bundlePath = path.join(ROOT, 'web', 'mdk.bundle.js');
 if (!fs.existsSync(bundlePath)) { console.error('Bundle fehlt — erst "npm run bundle".'); process.exit(1); }
 
 let h = fs.readFileSync(path.join(ROOT, 'web', 'claim-shell.html'), 'utf8');
-h = h.replace('<script>/*BUNDLE*/</script>', '<script>\n' + fs.readFileSync(bundlePath, 'utf8') + '\n</script>');
-h = h.replace('/*CONFIG*/', 'const CFG = ' + JSON.stringify(cfg) + ';');
+// Ersetzungs-FUNKTION statt String: sonst interpretiert replace() $-Sequenzen im Bundle
+h = h.replace('<script>/*BUNDLE*/</script>', () => '<script>\n' + fs.readFileSync(bundlePath, 'utf8') + '\n</script>');
+h = h.replace('/*CONFIG*/', () => 'const CFG = ' + JSON.stringify(cfg) + ';');
 fs.writeFileSync(path.join(ROOT, 'web', 'claim-demo.html'), h);
 console.log('web/claim-demo.html gebaut (' + (h.length / 1024 | 0) + ' KB) — im Browser öffnen.');

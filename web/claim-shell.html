@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pNode Rewards — Merkle-Distributor Demo (Solana Devnet)</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#05080f;--bg2:#0a1220;--panel:#0d1626;--panel2:#111d33;--line:#1c2c48;--txt:#dce7f5;--dim:#6b7f9e;--cyan:#2ee6c8;--cyand:#0f8f7a;--amber:#ffb545;--red:#ff5470;--glow:0 0 24px rgba(46,230,200,.18)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Space Grotesk',sans-serif;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:
+ radial-gradient(1px 1px at 12% 22%,#fff8 0,transparent 100%),radial-gradient(1px 1px at 68% 8%,#fff6 0,transparent 100%),
+ radial-gradient(1.5px 1.5px at 82% 64%,#fff5 0,transparent 100%),radial-gradient(1px 1px at 35% 78%,#fff7 0,transparent 100%),
+ radial-gradient(ellipse 80% 50% at 50% -10%,rgba(46,230,200,.08),transparent 70%)}
+.mono{font-family:'IBM Plex Mono',monospace}
+.wrap{max-width:940px;margin:0 auto;padding:30px 22px 80px;position:relative;z-index:1}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:11px}
+.logo-mark{width:38px;height:38px;border-radius:10px;background:conic-gradient(from 210deg,var(--cyan),#1a6fd4,var(--cyan));display:grid;place-items:center;font-weight:700;color:#041210;font-size:21px;box-shadow:var(--glow)}
+.logo b{font-size:1.25rem}.logo b span{color:var(--cyan)}
+.logo small{display:block;font-size:.6rem;color:var(--dim);letter-spacing:.16em;text-transform:uppercase}
+.net{font-size:.72rem;padding:5px 12px;border-radius:99px;border:1px solid var(--line);color:var(--amber);background:var(--panel);display:inline-flex;gap:7px;align-items:center}
+.net i{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pu 2s infinite}
+@keyframes pu{50%{opacity:.3}}
+.intro{color:var(--dim);font-size:.9rem;margin:4px 0 22px;line-height:1.55;max-width:780px}
+.intro b{color:var(--txt)}
+.statbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.stat{background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:14px;padding:15px 18px}
+.stat .l{font-size:.66rem;color:var(--dim);letter-spacing:.13em;text-transform:uppercase;margin-bottom:7px}
+.stat .v{font-family:'IBM Plex Mono',monospace;font-size:1.15rem;font-weight:600}
+.stat .v small{font-size:.75rem;color:var(--dim)}
+.bar{height:7px;border-radius:99px;background:var(--panel2);overflow:hidden;margin-top:9px}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--cyand),var(--cyan));transition:width .7s ease}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:16px;padding:19px 20px;transition:border-color .2s}
+.card.claimed{border-color:var(--cyand)}
+.card h3{font-size:1.02rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.card .addr{font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--dim);margin-bottom:12px;word-break:break-all}
+.card .meta{display:flex;justify-content:space-between;font-size:.78rem;color:var(--dim);margin-bottom:5px}
+.card .meta b{font-family:'IBM Plex Mono',monospace;color:var(--txt);font-weight:500}
+.card .reward{font-family:'IBM Plex Mono',monospace;font-size:1.45rem;color:var(--amber);font-weight:600;margin:9px 0 13px}
+.card .reward small{font-size:.8rem;color:var(--dim)}
+button.claim{width:100%;font-family:'IBM Plex Mono',monospace;font-size:.82rem;font-weight:600;padding:11px;border-radius:11px;cursor:pointer;border:none;background:linear-gradient(120deg,var(--cyan),#1fb9d8);color:#04211c;transition:all .2s}
+button.claim:hover:not(:disabled){transform:translateY(-1px);box-shadow:var(--glow)}
+button.claim:disabled{opacity:.45;cursor:not-allowed}
+.pill{font-family:'IBM Plex Mono',monospace;font-size:.66rem;padding:3px 10px;border-radius:99px;border:1px solid}
+.pill.ok{color:var(--cyan);border-color:var(--cyand);background:rgba(46,230,200,.07)}
+.pill.open{color:var(--amber);border-color:#8a6420;background:rgba(255,181,69,.07)}
+.txlink{display:block;margin-top:10px;font-size:.7rem;color:var(--cyan);text-decoration:none;font-family:'IBM Plex Mono',monospace;word-break:break-all}
+#log{background:#04070d;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:.72rem;line-height:1.75;max-height:260px;overflow-y:auto}
+#log .t{color:#3d4f6b;margin-right:8px}
+#log div{word-break:break-all}
+.ok{color:var(--cyan)}.warn{color:var(--amber)}.err{color:var(--red)}
+.foot{margin-top:18px;font-size:.72rem;color:var(--dim);line-height:1.6}
+.foot a{color:var(--cyan)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <div class="logo-mark">X</div>
+      <div><b>pNode <span>Rewards</span></b><small>Merkle-Distributor · Auto-Claim Prototyp</small></div>
+    </div>
+    <span class="net"><i></i> Solana Devnet · Spielgeld</span>
+  </header>
+  <p class="intro">Prototyp einer <b>automatischen pNode-Reward-Auszahlung</b>: Off-chain berechnete Rewards (aus pod-Credits) werden als <b>Merkle-Tree</b> on-chain verankert — ein Distributor-Account hält alle Token, jeder Operator holt seinen Anteil selbst mit kryptografischem Nachweis ab. Kein monatliches Proposal-Klicken, keine Einzelüberweisungen, keine Liste, die jemand von Hand pflegt. Verwendetes Programm: <span class="mono">saber merkle-distributor</span> (Open Source; dieselbe Bauart nutzte Jito für den JTO-Airdrop).</p>
+
+  <div class="statbar">
+    <div class="stat"><div class="l">Distributor</div><div class="v" style="font-size:.72rem;word-break:break-all" id="distAddr">—</div></div>
+    <div class="stat"><div class="l">Reward-Topf</div><div class="v" id="pot">— <small>XNDR</small></div></div>
+    <div class="stat"><div class="l">Ausgezahlt</div><div class="v" id="claimed">—</div><div class="bar"><i id="claimedBar" style="width:0%"></i></div></div>
+    <div class="stat"><div class="l">Claims</div><div class="v" id="numClaims">—</div></div>
+  </div>
+
+  <div class="cards" id="cards"></div>
+
+  <div id="log"><div><span class="t">—</span>Lade Distributor-Status vom Devnet …</div></div>
+  <p class="foot">Demo-Hinweis: Die fünf Test-Wallets stecken samt Schlüsseln in dieser Seite, damit man ohne Setup durchklicken kann — reines Devnet-Spielgeld. In Produktion verbindet jeder Operator seine eigene Wallet (Phantom o.ä.); nur die im Baum hinterlegte Wallet kann ihren Claim ausführen. Merkle-Root, Beträge und Proofs sind on-chain nachprüfbar: <a id="explDist" target="_blank" href="#">Distributor im Explorer</a></p>
+</div>
+
+<script>/*BUNDLE*/</script>
+<script>
+/*CONFIG*/
+const { Connection, Keypair, PublicKey } = MDK.web3;
+const conn = new Connection(CFG.rpc, 'confirmed');
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('de-DE');
+const short = s => String(s).slice(0,6)+'…'+String(s).slice(-5);
+
+function log(msg, cls){
+  const d = document.createElement('div');
+  d.innerHTML = '<span class="t">'+new Date().toLocaleTimeString('de-DE')+'</span>'+msg;
+  if (cls) d.className = cls;
+  $('log').appendChild(d); $('log').scrollTop = 1e9;
+}
+function sdkFor(kp){
+  const provider = MDK.SolanaProvider.init({ connection: conn, wallet: new MDK.SignerWallet(kp) });
+  return MDK.MerkleDistributorSDK.load({ provider });
+}
+async function alreadyClaimed(i){
+  const [key] = await MDK.findClaimStatusKey(new MDK.u64(i), new PublicKey(CFG.distributor));
+  return !!(await conn.getAccountInfo(key));
+}
+
+async function refresh(){
+  try{
+    $('distAddr').textContent = short(CFG.distributor);
+    $('explDist').href = 'https://explorer.solana.com/address/'+CFG.distributor+'?cluster=devnet';
+    const w = await sdkFor(Keypair.generate()).loadDistributor(new PublicKey(CFG.distributor));
+    const total = Number(w.data.maxTotalClaim.toString())/10**CFG.decimals;
+    const claimed = Number(w.data.totalAmountClaimed.toString())/10**CFG.decimals;
+    $('pot').innerHTML = fmt(total)+' <small>XNDR</small>';
+    $('claimed').textContent = fmt(claimed)+' XNDR';
+    $('claimedBar').style.width = (total ? claimed/total*100 : 0)+'%';
+    $('numClaims').textContent = w.data.numNodesClaimed.toString()+' / '+CFG.nodes.length;
+    for (let i=0;i<CFG.nodes.length;i++){
+      const done = await alreadyClaimed(i);
+      $('card'+i).classList.toggle('claimed', done);
+      $('pill'+i).outerHTML = done
+        ? '<span class="pill ok" id="pill'+i+'">ausgezahlt ✓</span>'
+        : '<span class="pill open" id="pill'+i+'">offen</span>';
+      $('btn'+i).disabled = done;
+      $('btn'+i).textContent = done ? 'Bereits ausgezahlt' : 'Reward abholen';
+    }
+    log('Status: '+w.data.numNodesClaimed+' von '+CFG.nodes.length+' abgeholt.','ok');
+  }catch(e){ log('Status-Fehler: '+e.message,'err'); }
+}
+
+async function doClaim(i){
+  const n = CFG.nodes[i], btn = $('btn'+i);
+  btn.disabled = true; btn.textContent = 'Hole ab …';
+  try{
+    log(n.name+': baue Claim (Index '+i+', '+fmt(n.reward)+' XNDR) …');
+    const kp = Keypair.fromSecretKey(Uint8Array.from(n.secret));
+    const w = await sdkFor(kp).loadDistributor(new PublicKey(CFG.distributor));
+    const rc = await (await w.claim({
+      index: new MDK.u64(i),
+      amount: new MDK.u64(CFG.amounts[i]),
+      proof: CFG.proofs[i].map(h => MDK.Buffer.from(h,'hex')),
+      claimant: kp.publicKey
+    })).confirm();
+    log(n.name+': ausgezahlt ✓ — Tx '+short(rc.signature),'ok');
+    const a = document.createElement('a');
+    a.className='txlink'; a.target='_blank';
+    a.href='https://explorer.solana.com/tx/'+rc.signature+'?cluster=devnet';
+    a.textContent='↗ Transaktion im Explorer';
+    $('card'+i).appendChild(a);
+    await refresh();
+  }catch(e){
+    log(n.name+': fehlgeschlagen — '+e.message,'err');
+    btn.disabled=false; btn.textContent='Reward abholen';
+  }
+}
+
+$('cards').innerHTML = CFG.nodes.map((n,i)=>`
+  <div class="card" id="card${i}">
+    <h3>${n.name} <span class="pill open" id="pill${i}">…</span></h3>
+    <div class="addr">${n.pubkey}</div>
+    <div class="meta"><span>pod-Credits (${CFG.period})</span><b>${fmt(n.credits)}</b></div>
+    <div class="meta"><span>Merkle-Index</span><b>${i}</b></div>
+    <div class="reward">${fmt(n.reward)} <small>XNDR</small></div>
+    <button class="claim" id="btn${i}" onclick="doClaim(${i})">Reward abholen</button>
+  </div>`).join('');
+
+refresh();
+setInterval(refresh, 45000);
+</script>
+</body>
+</html>

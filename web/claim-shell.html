@@ -1,90 +1,256 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>pNode Rewards — Merkle-Distributor Demo (Solana Devnet)</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>pNode Rewards — Merkle Distributor Prototype (Solana Devnet)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,600;0,6..12,700;0,6..12,800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#05080f;--bg2:#0a1220;--panel:#0d1626;--panel2:#111d33;--line:#1c2c48;--txt:#dce7f5;--dim:#6b7f9e;--cyan:#2ee6c8;--cyand:#0f8f7a;--amber:#ffb545;--red:#ff5470;--glow:0 0 24px rgba(46,230,200,.18)}
+:root{
+  --navy:#1b1c52;          /* base tone of the Xandeum site */
+  --navy-deep:#141546;
+  --navy-edge:#0e0f34;
+  --card:#20225c;
+  --card-2:#1a1c50;
+  --line:#33356f;
+  --line-soft:#2a2c63;
+  --txt:#eef0ff;
+  --dim:#9ea3d4;
+  --orange:#f5a623;
+  --orange-hot:#ffb845;
+  --violet:#7c3aed;
+  --violet-hot:#8b5cf6;
+  --teal:#2ec5b6;
+  --red:#ff6b81;
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--txt);font-family:'Space Grotesk',sans-serif;min-height:100vh}
-body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:
- radial-gradient(1px 1px at 12% 22%,#fff8 0,transparent 100%),radial-gradient(1px 1px at 68% 8%,#fff6 0,transparent 100%),
- radial-gradient(1.5px 1.5px at 82% 64%,#fff5 0,transparent 100%),radial-gradient(1px 1px at 35% 78%,#fff7 0,transparent 100%),
- radial-gradient(ellipse 80% 50% at 50% -10%,rgba(46,230,200,.08),transparent 70%)}
+body{
+  background:var(--navy);
+  color:var(--txt);
+  font-family:'Nunito Sans',system-ui,sans-serif;
+  min-height:100vh;
+  position:relative;
+  overflow-x:hidden;
+}
+/* Decor: concentric dotted arcs and soft orbs, echoing the staking portal */
+.decor{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.decor .arc{
+  position:absolute;border-radius:50%;
+  border:1px dotted rgba(46,197,182,.30);
+}
+.decor .arc.a{width:760px;height:760px;left:-300px;top:60px;border-color:rgba(46,197,182,.22)}
+.decor .arc.b{width:620px;height:620px;left:-230px;top:130px;border-color:rgba(46,197,182,.16)}
+.decor .arc.c{width:480px;height:480px;left:-160px;top:200px;border-color:rgba(46,197,182,.12)}
+.decor .arc.d{width:700px;height:700px;right:-290px;top:280px;border-color:rgba(150,90,220,.20)}
+.decor .arc.e{width:560px;height:560px;right:-220px;top:350px;border-color:rgba(150,90,220,.14)}
+.decor .orb{position:absolute;border-radius:50%;filter:blur(1px)}
+.decor .orb.o1{width:120px;height:120px;left:180px;top:120px;background:radial-gradient(circle at 35% 30%,#2a2c66,#15163f 70%);box-shadow:0 0 60px rgba(245,166,35,.10)}
+.decor .orb.o2{width:150px;height:150px;right:150px;top:560px;background:radial-gradient(circle at 35% 30%,#3a2f6e,#191545 70%);box-shadow:0 0 70px rgba(124,58,237,.18)}
+.decor .glow{position:absolute;inset:0;background:
+  radial-gradient(ellipse 60% 40% at 50% -5%,rgba(124,58,237,.16),transparent 70%),
+  radial-gradient(ellipse 50% 30% at 0% 40%,rgba(46,197,182,.07),transparent 70%);}
+
 .mono{font-family:'IBM Plex Mono',monospace}
-.wrap{max-width:940px;margin:0 auto;padding:30px 22px 80px;position:relative;z-index:1}
-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:12px}
-.logo{display:flex;align-items:center;gap:11px}
-.logo-mark{width:38px;height:38px;border-radius:10px;background:conic-gradient(from 210deg,var(--cyan),#1a6fd4,var(--cyan));display:grid;place-items:center;font-weight:700;color:#041210;font-size:21px;box-shadow:var(--glow)}
-.logo b{font-size:1.25rem}.logo b span{color:var(--cyan)}
-.logo small{display:block;font-size:.6rem;color:var(--dim);letter-spacing:.16em;text-transform:uppercase}
-.net{font-size:.72rem;padding:5px 12px;border-radius:99px;border:1px solid var(--line);color:var(--amber);background:var(--panel);display:inline-flex;gap:7px;align-items:center}
-.net i{width:7px;height:7px;border-radius:50%;background:var(--amber);animation:pu 2s infinite}
-@keyframes pu{50%{opacity:.3}}
-.intro{color:var(--dim);font-size:.9rem;margin:4px 0 22px;line-height:1.55;max-width:780px}
-.intro b{color:var(--txt)}
-.statbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
-.stat{background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:14px;padding:15px 18px}
-.stat .l{font-size:.66rem;color:var(--dim);letter-spacing:.13em;text-transform:uppercase;margin-bottom:7px}
-.stat .v{font-family:'IBM Plex Mono',monospace;font-size:1.15rem;font-weight:600}
-.stat .v small{font-size:.75rem;color:var(--dim)}
-.bar{height:7px;border-radius:99px;background:var(--panel2);overflow:hidden;margin-top:9px}
-.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--cyand),var(--cyan));transition:width .7s ease}
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-.card{background:linear-gradient(160deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:16px;padding:19px 20px;transition:border-color .2s}
-.card.claimed{border-color:var(--cyand)}
-.card h3{font-size:1.02rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
-.card .addr{font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--dim);margin-bottom:12px;word-break:break-all}
-.card .meta{display:flex;justify-content:space-between;font-size:.78rem;color:var(--dim);margin-bottom:5px}
-.card .meta b{font-family:'IBM Plex Mono',monospace;color:var(--txt);font-weight:500}
-.card .reward{font-family:'IBM Plex Mono',monospace;font-size:1.45rem;color:var(--amber);font-weight:600;margin:9px 0 13px}
-.card .reward small{font-size:.8rem;color:var(--dim)}
-button.claim{width:100%;font-family:'IBM Plex Mono',monospace;font-size:.82rem;font-weight:600;padding:11px;border-radius:11px;cursor:pointer;border:none;background:linear-gradient(120deg,var(--cyan),#1fb9d8);color:#04211c;transition:all .2s}
-button.claim:hover:not(:disabled){transform:translateY(-1px);box-shadow:var(--glow)}
-button.claim:disabled{opacity:.45;cursor:not-allowed}
-.pill{font-family:'IBM Plex Mono',monospace;font-size:.66rem;padding:3px 10px;border-radius:99px;border:1px solid}
-.pill.ok{color:var(--cyan);border-color:var(--cyand);background:rgba(46,230,200,.07)}
-.pill.open{color:var(--amber);border-color:#8a6420;background:rgba(255,181,69,.07)}
-.txlink{display:block;margin-top:10px;font-size:.7rem;color:var(--cyan);text-decoration:none;font-family:'IBM Plex Mono',monospace;word-break:break-all}
-#log{background:#04070d;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:.72rem;line-height:1.75;max-height:260px;overflow-y:auto}
-#log .t{color:#3d4f6b;margin-right:8px}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:relative;z-index:2;
+  background:#000;
+  border-bottom:1px solid #000;
+  padding:14px 26px;
+  display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:13px}
+.brand-mark{
+  width:42px;height:42px;flex-shrink:0;
+  display:grid;place-items:center;
+}
+.brand-mark svg{width:42px;height:42px}
+.brand-txt b{
+  display:block;font-size:1.34rem;font-weight:800;letter-spacing:.06em;line-height:1.05;
+}
+.brand-txt small{
+  display:block;font-size:.62rem;color:var(--orange);letter-spacing:.02em;margin-top:2px;font-weight:600;
+}
+.topnav{display:flex;gap:30px;align-items:center;font-size:1.02rem;font-weight:600}
+.topnav span{color:#8f93c4;padding-bottom:5px}
+.topnav span.active{color:#fff;border-bottom:3px solid var(--orange)}
+.badge-demo{
+  background:var(--violet);color:#fff;border:none;border-radius:10px;
+  padding:11px 20px;font-weight:700;font-size:.9rem;font-family:'Nunito Sans',sans-serif;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.badge-demo i{width:8px;height:8px;border-radius:50%;background:#c4b5fd;display:inline-block}
+
+/* ---------- content ---------- */
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:34px 24px 80px}
+h1{
+  text-align:center;color:var(--orange);
+  font-size:2.15rem;font-weight:700;letter-spacing:-.01em;margin-bottom:14px;
+}
+.lead{
+  text-align:center;color:#c3c7ef;font-size:.97rem;line-height:1.62;
+  max-width:790px;margin:0 auto 30px;
+}
+.lead b{color:#fff;font-weight:700}
+.lead code{font-family:'IBM Plex Mono',monospace;font-size:.88em;color:var(--teal)}
+
+/* Panel in the style of the YUGA box: card with a glowing outline */
+.panel{
+  background:linear-gradient(165deg,var(--card),var(--card-2));
+  border:1px solid var(--orange);
+  border-radius:16px;
+  box-shadow:0 0 34px rgba(245,166,35,.16), inset 0 0 40px rgba(0,0,0,.22);
+  padding:22px 26px;margin-bottom:22px;
+}
+.panel-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.panel-head .lbl{color:var(--orange);font-size:.78rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+.panel-head .lbl b{color:#fff;font-size:1.32rem;margin-left:9px;letter-spacing:0}
+.panel-head .pct{font-size:1.02rem;font-weight:700;color:#fff}
+.track{height:7px;border-radius:99px;background:#12133f;overflow:hidden;border:1px solid #2b2d66}
+.track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--orange),var(--orange-hot));transition:width .8s cubic-bezier(.4,0,.2,1)}
+.panel-foot{display:flex;justify-content:space-between;font-size:.84rem;color:var(--dim);margin-top:11px;flex-wrap:wrap;gap:8px}
+.panel-foot b{color:#fff;font-weight:600}
+
+/* key figures */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:26px}
+.stat{
+  background:linear-gradient(165deg,rgba(32,34,92,.9),rgba(24,26,74,.9));
+  border:1px solid var(--line);border-radius:14px;padding:16px 19px;
+}
+.stat .l{font-size:.68rem;color:var(--dim);letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px;font-weight:700}
+.stat .v{font-family:'IBM Plex Mono',monospace;font-size:1.24rem;font-weight:600;color:#fff}
+.stat .v small{font-size:.72rem;color:var(--dim);font-weight:400;margin-left:3px}
+.stat .v.accent{color:var(--orange)}
+
+/* pNode cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(292px,1fr));gap:16px}
+.card{
+  background:linear-gradient(165deg,var(--card),var(--card-2));
+  border:1px solid var(--line);border-radius:16px;padding:20px 22px;
+  transition:border-color .25s, box-shadow .25s, transform .25s;
+}
+.card:hover{transform:translateY(-2px)}
+.card.claimed{border-color:var(--teal);box-shadow:0 0 26px rgba(46,197,182,.16)}
+.card h3{font-size:1.16rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.card .addr{font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:#7d82b8;margin-bottom:15px;word-break:break-all;line-height:1.5}
+.card .meta{display:flex;justify-content:space-between;font-size:.84rem;color:var(--dim);margin-bottom:6px}
+.card .meta b{font-family:'IBM Plex Mono',monospace;color:#fff;font-weight:500}
+.card .reward{font-family:'IBM Plex Mono',monospace;font-size:1.62rem;color:var(--orange);font-weight:600;margin:13px 0 16px}
+.card .reward small{font-size:.74rem;color:var(--dim);margin-left:4px}
+button.claim{
+  width:100%;font-family:'Nunito Sans',sans-serif;font-size:.94rem;font-weight:700;
+  padding:12px;border-radius:11px;cursor:pointer;border:none;
+  background:var(--orange);color:#241500;transition:all .2s;
+}
+button.claim:hover:not(:disabled){background:var(--orange-hot);box-shadow:0 0 22px rgba(245,166,35,.35)}
+button.claim:disabled{background:#2b2d68;color:#7d82b8;cursor:not-allowed;box-shadow:none}
+.pill{font-size:.68rem;padding:4px 11px;border-radius:99px;border:1px solid;font-weight:700;letter-spacing:.04em}
+.pill.ok{color:var(--teal);border-color:rgba(46,197,182,.55);background:rgba(46,197,182,.10)}
+.pill.open{color:var(--orange);border-color:rgba(245,166,35,.5);background:rgba(245,166,35,.10)}
+.txlink{display:block;margin-top:11px;font-size:.75rem;color:var(--teal);text-decoration:none;font-family:'IBM Plex Mono',monospace}
+.txlink:hover{text-decoration:underline}
+
+/* Log */
+#log{
+  background:#101142;border:1px solid var(--line-soft);border-radius:14px;
+  padding:17px 19px;margin-top:26px;
+  font-family:'IBM Plex Mono',monospace;font-size:.75rem;line-height:1.8;
+  max-height:270px;overflow-y:auto;
+}
+#log .t{color:#5b5f9c;margin-right:9px}
 #log div{word-break:break-all}
-.ok{color:var(--cyan)}.warn{color:var(--amber)}.err{color:var(--red)}
-.foot{margin-top:18px;font-size:.72rem;color:var(--dim);line-height:1.6}
-.foot a{color:var(--cyan)}
+.ok{color:var(--teal)}.warn{color:var(--orange)}.err{color:var(--red)}
+
+.foot{margin-top:20px;font-size:.78rem;color:#8b90c6;line-height:1.65}
+.foot a{color:var(--teal)}
+.disclaimer{
+  margin-top:14px;padding:13px 17px;border-radius:11px;
+  background:rgba(124,58,237,.10);border:1px solid rgba(124,58,237,.35);
+  font-size:.78rem;color:#c9c2f5;line-height:1.6;
+}
+.disclaimer b{color:#fff}
+@media(max-width:720px){
+  .topnav{display:none}
+  h1{font-size:1.6rem}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="logo">
-      <div class="logo-mark">X</div>
-      <div><b>pNode <span>Rewards</span></b><small>Merkle-Distributor · Auto-Claim Prototyp</small></div>
-    </div>
-    <span class="net"><i></i> Solana Devnet · Spielgeld</span>
-  </header>
-  <p class="intro">Prototyp einer <b>automatischen pNode-Reward-Auszahlung</b>: Off-chain berechnete Rewards (aus pod-Credits) werden als <b>Merkle-Tree</b> on-chain verankert — ein Distributor-Account hält alle Token, jeder Operator holt seinen Anteil selbst mit kryptografischem Nachweis ab. Kein monatliches Proposal-Klicken, keine Einzelüberweisungen, keine Liste, die jemand von Hand pflegt. Verwendetes Programm: <span class="mono">saber merkle-distributor</span> (Open Source; dieselbe Bauart nutzte Jito für den JTO-Airdrop).</p>
+<div class="decor">
+  <div class="glow"></div>
+  <div class="arc a"></div><div class="arc b"></div><div class="arc c"></div>
+  <div class="arc d"></div><div class="arc e"></div>
+  <div class="orb o1"></div><div class="orb o2"></div>
+</div>
 
-  <div class="statbar">
-    <div class="stat"><div class="l">Distributor</div><div class="v" style="font-size:.72rem;word-break:break-all" id="distAddr">—</div></div>
-    <div class="stat"><div class="l">Reward-Topf</div><div class="v" id="pot">— <small>XNDR</small></div></div>
-    <div class="stat"><div class="l">Ausgezahlt</div><div class="v" id="claimed">—</div><div class="bar"><i id="claimedBar" style="width:0%"></i></div></div>
-    <div class="stat"><div class="l">Claims</div><div class="v" id="numClaims">—</div></div>
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-label="X">
+        <defs>
+          <linearGradient id="xg1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#f5a623"/><stop offset="100%" stop-color="#e8850c"/>
+          </linearGradient>
+          <linearGradient id="xg2" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0%" stop-color="#2ec5b6"/><stop offset="100%" stop-color="#1a9e93"/>
+          </linearGradient>
+        </defs>
+        <path d="M4 6 L17 6 L44 42 L31 42 Z" fill="url(#xg1)"/>
+        <path d="M44 6 L31 6 L4 42 L17 42 Z" fill="url(#xg2)" opacity=".92"/>
+      </svg>
+    </div>
+    <div class="brand-txt">
+      <b>PNODE REWARDS</b>
+      <small>Merkle Distributor · Community Prototype</small>
+    </div>
+  </div>
+  <nav class="topnav">
+    <span class="active">Claim</span>
+    <span>Distributor</span>
+    <span>Proofs</span>
+  </nav>
+  <span class="badge-demo"><i></i> Solana Devnet · Play Money</span>
+</div>
+
+<div class="wrap">
+  <h1>Claim your rewards — no monthly proposal</h1>
+  <p class="lead">A prototype for <b>automatic pNode reward payouts</b>: rewards computed off-chain are sealed into a <b>Merkle tree</b> anchored on-chain. One distributor account holds all the tokens; each operator claims their own share with a cryptographic proof — no individual transfers, no list maintained by hand, nothing that expires. Program used: <code>saber merkle-distributor</code>, the same design Jito forked for the JTO airdrop.</p>
+
+  <div class="panel">
+    <div class="panel-head">
+      <span class="lbl">Payout round <b id="period">—</b></span>
+      <span class="pct" id="pctDone">—</span>
+    </div>
+    <div class="track"><i id="claimedBar" style="width:0%"></i></div>
+    <div class="panel-foot">
+      <span><b id="claimed">—</b> claimed</span>
+      <span><b id="remaining">—</b> outstanding of <b id="pot">—</b> XNDR</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="l">Distributor</div><div class="v" style="font-size:.82rem" id="distAddr">—</div></div>
+    <div class="stat"><div class="l">Reward pool</div><div class="v accent" id="pot2">— <small>XNDR</small></div></div>
+    <div class="stat"><div class="l">Recipients</div><div class="v" id="numClaims">—</div></div>
+    <div class="stat"><div class="l">Network</div><div class="v" style="font-size:.95rem">Solana Devnet</div></div>
   </div>
 
   <div class="cards" id="cards"></div>
 
-  <div id="log"><div><span class="t">—</span>Lade Distributor-Status vom Devnet …</div></div>
-  <p class="foot">Demo-Hinweis: Die fünf Test-Wallets stecken samt Schlüsseln in dieser Seite, damit man ohne Setup durchklicken kann — reines Devnet-Spielgeld. In Produktion verbindet jeder Operator seine eigene Wallet (Phantom o.ä.); nur die im Baum hinterlegte Wallet kann ihren Claim ausführen. Merkle-Root, Beträge und Proofs sind on-chain nachprüfbar: <a id="explDist" target="_blank" href="#">Distributor im Explorer</a></p>
+  <div id="log"><div><span class="t">—</span>Loading distributor state from devnet …</div></div>
+
+  <p class="foot">Merkle root, amounts and proofs are verifiable on-chain: <a id="explDist" target="_blank" href="#">distributor in the explorer</a> · source: <a href="https://github.com/oliverbrosenbauer-cloud/pnode-merkle-distributor" target="_blank">GitHub</a></p>
+  <div class="disclaimer"><b>Not an official Xandeum product.</b> An independent community prototype by a pNode operator, styled after the XAND staking portal. Runs on Solana devnet only, with worthless test tokens. The five demo wallets are embedded in this page together with their keys so anyone can click through without any setup — in real use each operator connects their own wallet, and only the wallet recorded in the tree can execute its claim.</div>
 </div>
 
 <script>
-// Node-Globals, die gebündelte Solana-Bibliotheken erwarten
+// Node globals expected by the bundled Solana libraries
 window.global = window.global || window;
-// WICHTIG: versions.node NICHT setzen — sonst halten sich Libraries wie js-sha256
-// für eine Node-Umgebung und greifen zu require(), das es im Browser nicht gibt.
+// IMPORTANT: do NOT set versions.node — libraries such as js-sha256 would then
+// believe they run under Node and reach for require(), which browsers lack.
 window.process = window.process || {
   env: { NODE_ENV: 'production' }, browser: true,
   version: '', versions: {}, platform: 'browser',
@@ -100,24 +266,24 @@ function __showErr(msg){
   var el = document.getElementById('log');
   if (el){ var d = document.createElement('div'); d.className='err'; d.textContent = '⚠ ' + msg; el.appendChild(d); }
 }
-window.addEventListener('error', function(e){ __showErr((e.message||'Fehler') + (e.filename?' @'+String(e.filename).split('/').pop():'') + (e.lineno?':'+e.lineno:'')); });
-window.addEventListener('unhandledrejection', function(e){ __showErr('Promise: ' + (e.reason && (e.reason.message||e.reason))); });
+window.addEventListener('error', function(e){ __showErr((e.message||'error') + (e.filename?' @'+String(e.filename).split('/').pop():'') + (e.lineno?':'+e.lineno:'')); });
+window.addEventListener('unhandledrejection', function(e){ __showErr('promise: ' + (e.reason && (e.reason.message||e.reason))); });
 document.addEventListener('DOMContentLoaded', function(){ window.__errs.forEach(__showErr); window.__errs = []; });
 </script>
 <script>/*BUNDLE*/</script>
 <script>
 /*CONFIG*/
 try{
-if (typeof MDK === 'undefined') throw new Error('Bundle nicht geladen (MDK fehlt)');
+if (typeof MDK === 'undefined') throw new Error('bundle not loaded (MDK missing)');
 const { Connection, Keypair, PublicKey } = MDK.web3;
 const conn = new Connection(CFG.rpc, 'confirmed');
 const $ = id => document.getElementById(id);
-const fmt = n => n.toLocaleString('de-DE');
+const fmt = n => n.toLocaleString('en-US');
 const short = s => String(s).slice(0,6)+'…'+String(s).slice(-5);
 
 function log(msg, cls){
   const d = document.createElement('div');
-  d.innerHTML = '<span class="t">'+new Date().toLocaleTimeString('de-DE')+'</span>'+msg;
+  d.innerHTML = '<span class="t">'+new Date().toLocaleTimeString('en-US', {hour12:false})+'</span>'+msg;
   if (cls) d.className = cls;
   $('log').appendChild(d); $('log').scrollTop = 1e9;
 }
@@ -137,28 +303,33 @@ async function refresh(){
     const w = await sdkFor(Keypair.generate()).loadDistributor(new PublicKey(CFG.distributor));
     const total = Number(w.data.maxTotalClaim.toString())/10**CFG.decimals;
     const claimed = Number(w.data.totalAmountClaimed.toString())/10**CFG.decimals;
-    $('pot').innerHTML = fmt(total)+' <small>XNDR</small>';
+    const pct = total ? claimed/total*100 : 0;
+    $('period').textContent = CFG.period || '—';
+    $('pot').textContent = fmt(total);
+    $('pot2').innerHTML = fmt(total)+' <small>XNDR</small>';
     $('claimed').textContent = fmt(claimed)+' XNDR';
-    $('claimedBar').style.width = (total ? claimed/total*100 : 0)+'%';
+    $('remaining').textContent = fmt(total-claimed);
+    $('pctDone').textContent = pct.toFixed(2)+'% complete';
+    $('claimedBar').style.width = pct+'%';
     $('numClaims').textContent = w.data.numNodesClaimed.toString()+' / '+CFG.nodes.length;
     for (let i=0;i<CFG.nodes.length;i++){
       const done = await alreadyClaimed(i);
       $('card'+i).classList.toggle('claimed', done);
       $('pill'+i).outerHTML = done
-        ? '<span class="pill ok" id="pill'+i+'">ausgezahlt ✓</span>'
-        : '<span class="pill open" id="pill'+i+'">offen</span>';
+        ? '<span class="pill ok" id="pill'+i+'">claimed ✓</span>'
+        : '<span class="pill open" id="pill'+i+'">open</span>';
       $('btn'+i).disabled = done;
-      $('btn'+i).textContent = done ? 'Bereits ausgezahlt' : 'Reward abholen';
+      $('btn'+i).textContent = done ? 'Already claimed' : 'Claim reward';
     }
-    log('Status: '+w.data.numNodesClaimed+' von '+CFG.nodes.length+' abgeholt.','ok');
-  }catch(e){ log('Status-Fehler: '+e.message,'err'); }
+    log('State: '+w.data.numNodesClaimed+' of '+CFG.nodes.length+' claimed.','ok');
+  }catch(e){ log('State error: '+e.message,'err'); }
 }
 
 async function doClaim(i){
   const n = CFG.nodes[i], btn = $('btn'+i);
-  btn.disabled = true; btn.textContent = 'Hole ab …';
+  btn.disabled = true; btn.textContent = 'Claiming …';
   try{
-    log(n.name+': baue Claim (Index '+i+', '+fmt(n.reward)+' XNDR) …');
+    log(n.name+': building claim (index '+i+', '+fmt(n.reward)+' XNDR) …');
     const kp = Keypair.fromSecretKey(Uint8Array.from(n.secret));
     const w = await sdkFor(kp).loadDistributor(new PublicKey(CFG.distributor));
     const rc = await (await w.claim({
@@ -167,16 +338,16 @@ async function doClaim(i){
       proof: CFG.proofs[i].map(h => MDK.Buffer.from(h,'hex')),
       claimant: kp.publicKey
     })).confirm();
-    log(n.name+': ausgezahlt ✓ — Tx '+short(rc.signature),'ok');
+    log(n.name+': claimed ✓ — tx '+short(rc.signature),'ok');
     const a = document.createElement('a');
     a.className='txlink'; a.target='_blank';
     a.href='https://explorer.solana.com/tx/'+rc.signature+'?cluster=devnet';
-    a.textContent='↗ Transaktion im Explorer';
+    a.textContent='↗ transaction in explorer';
     $('card'+i).appendChild(a);
     await refresh();
   }catch(e){
-    log(n.name+': fehlgeschlagen — '+e.message,'err');
-    btn.disabled=false; btn.textContent='Reward abholen';
+    log(n.name+': failed — '+e.message,'err');
+    btn.disabled=false; btn.textContent='Claim reward';
   }
 }
 
@@ -184,18 +355,18 @@ $('cards').innerHTML = CFG.nodes.map((n,i)=>`
   <div class="card" id="card${i}">
     <h3>${n.name} <span class="pill open" id="pill${i}">…</span></h3>
     <div class="addr">${n.pubkey}</div>
-    <div class="meta"><span>pod-Credits (${CFG.period})</span><b>${fmt(n.credits)}</b></div>
-    <div class="meta"><span>Merkle-Index</span><b>${i}</b></div>
+    <div class="meta"><span>pod credits (${CFG.period})</span><b>${fmt(n.credits)}</b></div>
+    <div class="meta"><span>Merkle index</span><b>${i}</b></div>
     <div class="reward">${fmt(n.reward)} <small>XNDR</small></div>
-    <button class="claim" id="btn${i}">Reward abholen</button>
+    <button class="claim" id="btn${i}">Claim reward</button>
   </div>`).join('');
 
-// Klicks per Listener binden (Funktionen leben im try-Scope, nicht global)
+// Bind clicks via listener (functions live in the try scope, not globally)
 CFG.nodes.forEach((n, i) => $('btn'+i).addEventListener('click', () => doClaim(i)));
 
 refresh();
 setInterval(refresh, 45000);
-}catch(e){ __showErr('Start: '+e.message); console.error(e); }
+}catch(e){ __showErr('startup: '+e.message); console.error(e); }
 </script>
 </body>
 </html>

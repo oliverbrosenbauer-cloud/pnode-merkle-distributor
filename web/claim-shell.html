@@ -80,9 +80,35 @@ button.claim:disabled{opacity:.45;cursor:not-allowed}
   <p class="foot">Demo-Hinweis: Die fünf Test-Wallets stecken samt Schlüsseln in dieser Seite, damit man ohne Setup durchklicken kann — reines Devnet-Spielgeld. In Produktion verbindet jeder Operator seine eigene Wallet (Phantom o.ä.); nur die im Baum hinterlegte Wallet kann ihren Claim ausführen. Merkle-Root, Beträge und Proofs sind on-chain nachprüfbar: <a id="explDist" target="_blank" href="#">Distributor im Explorer</a></p>
 </div>
 
+<script>
+// Node-Globals, die gebündelte Solana-Bibliotheken erwarten
+window.global = window.global || window;
+// WICHTIG: versions.node NICHT setzen — sonst halten sich Libraries wie js-sha256
+// für eine Node-Umgebung und greifen zu require(), das es im Browser nicht gibt.
+window.process = window.process || {
+  env: { NODE_ENV: 'production' }, browser: true,
+  version: '', versions: {}, platform: 'browser',
+  argv: [], cwd: function(){ return '/'; },
+  nextTick: function(f){ var a = Array.prototype.slice.call(arguments,1); setTimeout(function(){ f.apply(null,a); }, 0); },
+  on: function(){}, emit: function(){}, listeners: function(){ return []; }
+};
+</script>
+<script>
+window.__errs = [];
+function __showErr(msg){
+  window.__errs.push(msg);
+  var el = document.getElementById('log');
+  if (el){ var d = document.createElement('div'); d.className='err'; d.textContent = '⚠ ' + msg; el.appendChild(d); }
+}
+window.addEventListener('error', function(e){ __showErr((e.message||'Fehler') + (e.filename?' @'+String(e.filename).split('/').pop():'') + (e.lineno?':'+e.lineno:'')); });
+window.addEventListener('unhandledrejection', function(e){ __showErr('Promise: ' + (e.reason && (e.reason.message||e.reason))); });
+document.addEventListener('DOMContentLoaded', function(){ window.__errs.forEach(__showErr); window.__errs = []; });
+</script>
 <script>/*BUNDLE*/</script>
 <script>
 /*CONFIG*/
+try{
+if (typeof MDK === 'undefined') throw new Error('Bundle nicht geladen (MDK fehlt)');
 const { Connection, Keypair, PublicKey } = MDK.web3;
 const conn = new Connection(CFG.rpc, 'confirmed');
 const $ = id => document.getElementById(id);
@@ -166,6 +192,7 @@ $('cards').innerHTML = CFG.nodes.map((n,i)=>`
 
 refresh();
 setInterval(refresh, 45000);
+}catch(e){ __showErr('Start: '+e.message); console.error(e); }
 </script>
 </body>
 </html>

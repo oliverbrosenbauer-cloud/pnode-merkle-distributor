@@ -187,8 +187,11 @@ $('cards').innerHTML = CFG.nodes.map((n,i)=>`
     <div class="meta"><span>pod-Credits (${CFG.period})</span><b>${fmt(n.credits)}</b></div>
     <div class="meta"><span>Merkle-Index</span><b>${i}</b></div>
     <div class="reward">${fmt(n.reward)} <small>XNDR</small></div>
-    <button class="claim" id="btn${i}" onclick="doClaim(${i})">Reward abholen</button>
+    <button class="claim" id="btn${i}">Reward abholen</button>
   </div>`).join('');
+
+// Klicks per Listener binden (Funktionen leben im try-Scope, nicht global)
+CFG.nodes.forEach((n, i) => $('btn'+i).addEventListener('click', () => doClaim(i)));
 
 refresh();
 setInterval(refresh, 45000);

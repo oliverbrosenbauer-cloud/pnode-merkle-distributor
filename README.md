@@ -60,9 +60,13 @@ npm run page      #    → open web/claim-demo.html
 
 ### The claim page
 
-`web/claim-demo.html` is a single self-contained file: five pNode cards with their credits and reward, a live progress bar reading the distributor account, and a claim button per node. Claimed entries are detected on-chain and lock themselves. Every transaction links into the Solana Explorer.
+`web/claim-demo.html` is a single self-contained file with a live progress bar reading the distributor account, and it has two modes.
 
-For clickability the five demo wallets are embedded in the page — devnet play money, nothing else. In a real deployment the operator connects their own wallet instead, and the program still only accepts a claim signed by the wallet recorded in the tree.
+**Operator mode (default).** Connect the wallet you registered your pNode with, or paste its address to look up your entry without connecting. You only ever see your own row — with 300 recipients nobody wants to scroll through 300 cards to find themselves. The program enforces the same rule on-chain: a claim is only valid when signed by the wallet recorded in the tree.
+
+**Demo mode (collapsed).** Five test wallets embedded in the page so anyone can click through the full flow without a wallet or any setup. Devnet play money. A real deployment ships no keys at all.
+
+Claim status is read with one batched `getMultipleAccounts` call per 100 recipients rather than one call each — that is what keeps the page responsive as the list grows. Merkle proofs grow logarithmically: 5 recipients need 3 hashes, 300 need at most 9. Building a tree over 300 recipients and all their proofs takes under 100 ms. Claimed entries lock themselves, and every transaction links into the Solana Explorer.
 
 ## Layout
 
@@ -81,13 +85,3 @@ web/claim-shell.html   UI template
 Built by a pNode operator, not a professional Solana developer — corrections and pull requests are welcome. If any of this is useful to the Xandeum foundation, take it, fork it, rewrite it.
 
 MIT licensed. Devnet only.
-
-## How the claim page works at scale
-
-The page has two modes:
-
-**Operator mode (default).** Connect the wallet you registered your pNode with, or paste its address to look up your entry without connecting. You only ever see your own row — with 300 recipients nobody wants to scroll through 300 cards to find themselves. The program enforces the same thing on-chain: a claim is only valid when signed by the wallet recorded in the tree.
-
-**Demo mode (collapsed).** Five test wallets embedded in the page so anyone can click through the full flow without a wallet or any setup. Devnet play money. A real deployment ships no keys at all.
-
-Claim status is read with one batched `getMultipleAccounts` call per 100 recipients rather than one call per recipient — that is what keeps the page responsive as the list grows. Merkle proofs grow logarithmically: 5 recipients need 3 hashes, 300 need at most 9. Building a tree over 300 recipients and all their proofs takes under 100 ms.

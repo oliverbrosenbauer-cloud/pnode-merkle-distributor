@@ -8,7 +8,7 @@ if (!s.distributor) { console.error('Kein Distributor — erst "npm run setup".'
 
 const cfg = {
   rpc: process.env.RPC_URL || 'https://api.devnet.solana.com',
-  distributor: s.distributor, mint: s.mint, decimals: s.decimals, period: s.period,
+  distributor: s.distributor, mint: s.mint, decimals: s.decimals, period: s.period, root: s.root,
   proofs: s.proofs,
   amounts: s.nodes.map(n => (BigInt(n.reward) * 10n ** BigInt(s.decimals)).toString()),
   nodes: s.nodes.map(n => ({

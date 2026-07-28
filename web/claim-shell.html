@@ -176,6 +176,79 @@ button.claim:disabled{background:#2b2d68;color:#7d82b8;cursor:not-allowed;box-sh
   .topnav{display:none}
   h1{font-size:1.6rem}
 }
+/* ---------- claim area (production mode) ---------- */
+.claimbox{
+  background:linear-gradient(165deg,var(--card),var(--card-2));
+  border:1px solid var(--orange);border-radius:16px;
+  box-shadow:0 0 34px rgba(245,166,35,.14), inset 0 0 40px rgba(0,0,0,.22);
+  padding:26px 28px;margin-bottom:22px;
+}
+.claimbox h2{font-size:1.16rem;font-weight:700;margin-bottom:6px}
+.claimbox p.hint{color:var(--dim);font-size:.86rem;line-height:1.55;margin-bottom:18px}
+.connect-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+button.primary{
+  font-family:'Nunito Sans',sans-serif;font-size:.96rem;font-weight:700;
+  padding:13px 24px;border-radius:11px;cursor:pointer;border:none;
+  background:var(--violet);color:#fff;transition:all .2s;
+}
+button.primary:hover:not(:disabled){background:var(--violet-hot);box-shadow:0 0 24px rgba(124,58,237,.45)}
+button.primary:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.sep{color:var(--dim);font-size:.86rem;padding:0 4px}
+input.addr{
+  flex:1;min-width:260px;background:#14153f;border:1px solid var(--line);
+  color:var(--txt);border-radius:11px;padding:13px 15px;
+  font-family:'IBM Plex Mono',monospace;font-size:.82rem;
+}
+input.addr:focus{outline:none;border-color:var(--teal)}
+button.ghost{
+  font-family:'Nunito Sans',sans-serif;font-size:.9rem;font-weight:700;
+  padding:13px 20px;border-radius:11px;cursor:pointer;
+  background:none;color:var(--teal);border:1px solid rgba(46,197,182,.5);transition:all .2s;
+}
+button.ghost:hover{background:rgba(46,197,182,.10)}
+
+/* result of a lookup */
+.result{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);display:none}
+.result.show{display:block}
+.result .who{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.result .who b{font-size:1.24rem}
+.result .addr{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:#7d82b8;word-break:break-all;margin-bottom:16px}
+.result .amount{font-family:'IBM Plex Mono',monospace;font-size:2.1rem;color:var(--orange);font-weight:600;margin-bottom:4px}
+.result .amount small{font-size:.82rem;color:var(--dim);margin-left:6px}
+.result .sub{font-size:.82rem;color:var(--dim);margin-bottom:20px}
+.notfound{
+  margin-top:20px;padding:16px 18px;border-radius:11px;display:none;
+  background:rgba(255,107,129,.08);border:1px solid rgba(255,107,129,.35);
+  color:#ffb3bd;font-size:.88rem;line-height:1.55;
+}
+.notfound.show{display:block}
+
+/* demo section */
+details.demo{
+  background:linear-gradient(165deg,rgba(32,34,92,.6),rgba(24,26,74,.6));
+  border:1px solid var(--line);border-radius:16px;padding:0;margin-bottom:22px;overflow:hidden;
+}
+details.demo summary{
+  padding:17px 22px;cursor:pointer;font-weight:700;font-size:.98rem;
+  list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+details.demo summary::-webkit-details-marker{display:none}
+details.demo summary:hover{background:rgba(255,255,255,.03)}
+details.demo summary .tag{
+  font-size:.68rem;font-weight:700;color:var(--violet-hot);
+  border:1px solid rgba(124,58,237,.5);background:rgba(124,58,237,.12);
+  padding:4px 11px;border-radius:99px;letter-spacing:.04em;
+}
+details.demo summary .chev{color:var(--dim);font-size:.8rem;transition:transform .2s}
+details.demo[open] summary .chev{transform:rotate(90deg)}
+details.demo .demo-body{padding:4px 22px 22px}
+details.demo .demo-note{color:var(--dim);font-size:.82rem;line-height:1.55;margin-bottom:16px}
+.root-line{
+  font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:#7d82b8;
+  word-break:break-all;margin-top:6px;
+}
+.root-line b{color:var(--teal);font-weight:500}
+
 </style>
 </head>
 <body>
@@ -238,12 +311,49 @@ button.claim:disabled{background:#2b2d68;color:#7d82b8;cursor:not-allowed;box-sh
     <div class="stat"><div class="l">Network</div><div class="v" style="font-size:.95rem">Solana Devnet</div></div>
   </div>
 
-  <div class="cards" id="cards"></div>
+  <!-- ===== production mode: one operator, one claim ===== -->
+  <div class="claimbox">
+    <h2>Find your reward</h2>
+    <p class="hint">Connect the wallet you registered your pNode with, or paste its address to check without connecting. You will only ever see and claim your own entry — the program accepts a claim solely from the wallet recorded in the tree.</p>
+    <div class="connect-row">
+      <button class="primary" id="btnConnect">Connect wallet</button>
+      <span class="sep">or</span>
+      <input class="addr mono" id="addrInput" placeholder="paste your pNode wallet address" spellcheck="false">
+      <button class="ghost" id="btnLookup">Check</button>
+    </div>
+
+    <div class="result" id="result">
+      <div class="who">
+        <b id="rName">—</b>
+        <span class="pill open" id="rPill">—</span>
+      </div>
+      <div class="addr mono" id="rAddr">—</div>
+      <div class="amount" id="rAmount">— <small>XNDR</small></div>
+      <div class="sub" id="rSub">—</div>
+      <button class="claim" id="rBtn">Claim reward</button>
+      <a class="txlink" id="rTx" target="_blank" style="display:none"></a>
+    </div>
+
+    <div class="notfound" id="notfound"></div>
+  </div>
+
+  <!-- ===== demo mode: click through without a wallet ===== -->
+  <details class="demo" id="demoBox">
+    <summary>
+      <span><span class="chev">▶</span> &nbsp;Try it without a wallet <span class="tag">demo</span></span>
+      <span class="mono" style="font-size:.72rem;color:var(--dim)" id="demoCount">—</span>
+    </summary>
+    <div class="demo-body">
+      <p class="demo-note">These five test wallets are embedded in this page together with their keys, so anyone can click through the full flow without any setup. Devnet play money, worthless by construction. A real deployment ships no keys at all — operators use the section above.</p>
+      <div class="cards" id="cards"></div>
+    </div>
+  </details>
 
   <div id="log"><div><span class="t">—</span>Loading distributor state from devnet …</div></div>
 
-  <p class="foot">Merkle root, amounts and proofs are verifiable on-chain: <a id="explDist" target="_blank" href="#">distributor in the explorer</a> · source: <a href="https://github.com/oliverbrosenbauer-cloud/pnode-merkle-distributor" target="_blank">GitHub</a></p>
-  <div class="disclaimer"><b>Not an official Xandeum product.</b> An independent community prototype by a pNode operator, styled after the XAND staking portal. Runs on Solana devnet only, with worthless test tokens. The five demo wallets are embedded in this page together with their keys so anyone can click through without any setup — in real use each operator connects their own wallet, and only the wallet recorded in the tree can execute its claim.</div>
+  <p class="foot">Merkle root, amounts and proofs are verifiable on-chain: <a id="explDist" target="_blank" href="#">distributor in the explorer</a> · source: <a href="https://github.com/oliverbrosenbauer-cloud/pnode-merkle-distributor" target="_blank">GitHub</a>
+  <span class="root-line">Merkle root: <b id="rootHex">—</b></span></p>
+  <div class="disclaimer"><b>Not an official Xandeum product.</b> An independent community prototype by a pNode operator, styled after the XAND staking portal. Runs on Solana devnet only, with worthless test tokens. In real use each operator connects their own wallet, and only the wallet recorded in the tree can execute its claim.</div>
 </div>
 
 <script>
@@ -280,77 +390,187 @@ const conn = new Connection(CFG.rpc, 'confirmed');
 const $ = id => document.getElementById(id);
 const fmt = n => n.toLocaleString('en-US');
 const short = s => String(s).slice(0,6)+'…'+String(s).slice(-5);
+const DEC = 10 ** CFG.decimals;
 
 function log(msg, cls){
   const d = document.createElement('div');
-  d.innerHTML = '<span class="t">'+new Date().toLocaleTimeString('en-US', {hour12:false})+'</span>'+msg;
+  d.innerHTML = '<span class="t">'+new Date().toLocaleTimeString('en-US',{hour12:false})+'</span>'+msg;
   if (cls) d.className = cls;
   $('log').appendChild(d); $('log').scrollTop = 1e9;
 }
-function sdkFor(kp){
-  const provider = MDK.SolanaProvider.init({ connection: conn, wallet: new MDK.SignerWallet(kp) });
+
+/* ---------- signer helpers ---------- */
+// Saber's provider only needs {publicKey, signTransaction, signAllTransactions}
+function sdkFor(wallet){
+  const provider = MDK.SolanaProvider.init({ connection: conn, wallet });
   return MDK.MerkleDistributorSDK.load({ provider });
 }
-async function alreadyClaimed(i){
-  const [key] = await MDK.findClaimStatusKey(new MDK.u64(i), new PublicKey(CFG.distributor));
-  return !!(await conn.getAccountInfo(key));
+const walletFromKeypair = kp => new MDK.SignerWallet(kp);
+function walletFromPhantom(p){
+  return {
+    publicKey: p.publicKey,
+    signTransaction: tx => p.signTransaction(tx),
+    signAllTransactions: txs => p.signAllTransactions(txs)
+  };
 }
 
+/* ---------- claim status, batched ---------- */
+// One getMultipleAccounts call per 100 recipients instead of one call each —
+// this is what keeps the page usable at 300+ recipients.
+async function claimedFlags(indices){
+  const keys = [];
+  for (const i of indices){
+    const [k] = await MDK.findClaimStatusKey(new MDK.u64(i), new PublicKey(CFG.distributor));
+    keys.push(k);
+  }
+  const out = {};
+  for (let s = 0; s < keys.length; s += 100){
+    const slice = keys.slice(s, s+100);
+    const infos = await conn.getMultipleAccountsInfo(slice);
+    infos.forEach((info, n) => { out[indices[s+n]] = !!info; });
+  }
+  return out;
+}
+
+/* ---------- overview ---------- */
 async function refresh(){
   try{
     $('distAddr').textContent = short(CFG.distributor);
     $('explDist').href = 'https://explorer.solana.com/address/'+CFG.distributor+'?cluster=devnet';
-    const w = await sdkFor(Keypair.generate()).loadDistributor(new PublicKey(CFG.distributor));
-    const total = Number(w.data.maxTotalClaim.toString())/10**CFG.decimals;
-    const claimed = Number(w.data.totalAmountClaimed.toString())/10**CFG.decimals;
-    const pct = total ? claimed/total*100 : 0;
+    $('rootHex').textContent = CFG.root || '—';
     $('period').textContent = CFG.period || '—';
+
+    const w = await sdkFor(walletFromKeypair(Keypair.generate())).loadDistributor(new PublicKey(CFG.distributor));
+    const total = Number(w.data.maxTotalClaim.toString())/DEC;
+    const claimed = Number(w.data.totalAmountClaimed.toString())/DEC;
+    const pct = total ? claimed/total*100 : 0;
     $('pot').textContent = fmt(total);
     $('pot2').innerHTML = fmt(total)+' <small>XNDR</small>';
     $('claimed').textContent = fmt(claimed)+' XNDR';
     $('remaining').textContent = fmt(total-claimed);
     $('pctDone').textContent = pct.toFixed(2)+'% complete';
     $('claimedBar').style.width = pct+'%';
-    $('numClaims').textContent = w.data.numNodesClaimed.toString()+' / '+CFG.nodes.length;
-    for (let i=0;i<CFG.nodes.length;i++){
-      const done = await alreadyClaimed(i);
-      $('card'+i).classList.toggle('claimed', done);
-      $('pill'+i).outerHTML = done
-        ? '<span class="pill ok" id="pill'+i+'">claimed ✓</span>'
-        : '<span class="pill open" id="pill'+i+'">open</span>';
-      $('btn'+i).disabled = done;
-      $('btn'+i).textContent = done ? 'Already claimed' : 'Claim reward';
-    }
-    log('State: '+w.data.numNodesClaimed+' of '+CFG.nodes.length+' claimed.','ok');
-  }catch(e){ log('State error: '+e.message,'err'); }
+    $('numClaims').textContent = w.data.numNodesClaimed.toString()+' / '+w.data.maxNumNodes.toString();
+    $('demoCount').textContent = CFG.nodes.length+' test wallets';
+    log('State: '+w.data.numNodesClaimed+' of '+w.data.maxNumNodes+' claimed.','ok');
+    return true;
+  }catch(e){ log('State error: '+e.message,'err'); return false; }
 }
 
-async function doClaim(i){
-  const n = CFG.nodes[i], btn = $('btn'+i);
+/* ---------- lookup: find one address in the tree ---------- */
+let current = null;   // {index, node, wallet|null}
+
+function findIndexByAddress(addr){
+  return CFG.nodes.findIndex(n => n.pubkey === addr);
+}
+
+async function showEntry(index, wallet){
+  const n = CFG.nodes[index];
+  current = { index, node: n, wallet: wallet || null };
+  $('notfound').classList.remove('show');
+  $('result').classList.add('show');
+  $('rTx').style.display = 'none';
+  $('rName').textContent = n.name;
+  $('rAddr').textContent = n.pubkey;
+  $('rAmount').innerHTML = fmt(n.reward)+' <small>XNDR</small>';
+  $('rSub').textContent = 'pod credits '+CFG.period+': '+fmt(n.credits)+'  ·  Merkle index '+index;
+
+  const flags = await claimedFlags([index]);
+  const done = flags[index];
+  $('rPill').outerHTML = done
+    ? '<span class="pill ok" id="rPill">claimed ✓</span>'
+    : '<span class="pill open" id="rPill">open</span>';
+  const btn = $('rBtn');
+  if (done){ btn.disabled = true; btn.textContent = 'Already claimed'; }
+  else if (!wallet){ btn.disabled = true; btn.textContent = 'Connect this wallet to claim'; }
+  else { btn.disabled = false; btn.textContent = 'Claim '+fmt(n.reward)+' XNDR'; }
+}
+
+function showNotFound(addr){
+  $('result').classList.remove('show');
+  $('notfound').classList.add('show');
+  $('notfound').innerHTML = 'No entry for <span class="mono">'+short(addr)+'</span> in this payout round. '
+    + 'Either that wallet did not run a registered pNode in '+CFG.period+', or it is a different wallet than the one on file.';
+}
+
+/* ---------- wallet connect ---------- */
+let phantom = null;
+$('btnConnect').addEventListener('click', async () => {
+  const p = window.phantom?.solana || window.solana;
+  if (!p || !p.isPhantom){
+    log('Phantom not found — install it from phantom.com, or use the address field to look up an entry.','warn');
+    return;
+  }
+  try{
+    const res = await p.connect();
+    phantom = p;
+    const addr = res.publicKey.toBase58();
+    $('btnConnect').textContent = short(addr)+' ◉';
+    log('Wallet connected: '+addr,'ok');
+    const idx = findIndexByAddress(addr);
+    if (idx >= 0) await showEntry(idx, walletFromPhantom(p));
+    else showNotFound(addr);
+  }catch(e){ log('Connection refused: '+e.message,'err'); }
+});
+
+/* ---------- address lookup (no wallet needed) ---------- */
+async function doLookup(){
+  const addr = $('addrInput').value.trim();
+  if (!addr) return;
+  try{ new PublicKey(addr); }
+  catch(e){ log('Not a valid Solana address.','err'); return; }
+  const idx = findIndexByAddress(addr);
+  if (idx >= 0){
+    // if the connected wallet matches, allow claiming right away
+    const wallet = (phantom && phantom.publicKey?.toBase58() === addr) ? walletFromPhantom(phantom) : null;
+    await showEntry(idx, wallet);
+    log('Entry found: '+CFG.nodes[idx].name+' (index '+idx+')','ok');
+  } else {
+    showNotFound(addr);
+    log('No entry for '+short(addr)+' in this round.','warn');
+  }
+}
+$('btnLookup').addEventListener('click', doLookup);
+$('addrInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLookup(); });
+
+/* ---------- claiming ---------- */
+async function claim(index, wallet, btn){
+  const n = CFG.nodes[index];
+  const label = btn.textContent;
   btn.disabled = true; btn.textContent = 'Claiming …';
   try{
-    log(n.name+': building claim (index '+i+', '+fmt(n.reward)+' XNDR) …');
-    const kp = Keypair.fromSecretKey(Uint8Array.from(n.secret));
-    const w = await sdkFor(kp).loadDistributor(new PublicKey(CFG.distributor));
+    log(n.name+': building claim (index '+index+', '+fmt(n.reward)+' XNDR) …');
+    const w = await sdkFor(wallet).loadDistributor(new PublicKey(CFG.distributor));
     const rc = await (await w.claim({
-      index: new MDK.u64(i),
-      amount: new MDK.u64(CFG.amounts[i]),
-      proof: CFG.proofs[i].map(h => MDK.Buffer.from(h,'hex')),
-      claimant: kp.publicKey
+      index: new MDK.u64(index),
+      amount: new MDK.u64(CFG.amounts[index]),
+      proof: CFG.proofs[index].map(h => MDK.Buffer.from(h,'hex')),
+      claimant: wallet.publicKey
     })).confirm();
     log(n.name+': claimed ✓ — tx '+short(rc.signature),'ok');
-    const a = document.createElement('a');
-    a.className='txlink'; a.target='_blank';
-    a.href='https://explorer.solana.com/tx/'+rc.signature+'?cluster=devnet';
-    a.textContent='↗ transaction in explorer';
-    $('card'+i).appendChild(a);
     await refresh();
+    return rc.signature;
   }catch(e){
     log(n.name+': failed — '+e.message,'err');
-    btn.disabled=false; btn.textContent='Claim reward';
+    btn.disabled = false; btn.textContent = label;
+    return null;
   }
 }
 
+$('rBtn').addEventListener('click', async () => {
+  if (!current || !current.wallet) return;
+  const sig = await claim(current.index, current.wallet, $('rBtn'));
+  if (sig){
+    $('rBtn').textContent = 'Already claimed'; $('rBtn').disabled = true;
+    $('rPill').outerHTML = '<span class="pill ok" id="rPill">claimed ✓</span>';
+    const a = $('rTx');
+    a.href = 'https://explorer.solana.com/tx/'+sig+'?cluster=devnet';
+    a.textContent = '↗ transaction in explorer';
+    a.style.display = 'block';
+  }
+});
+
+/* ---------- demo cards ---------- */
 $('cards').innerHTML = CFG.nodes.map((n,i)=>`
   <div class="card" id="card${i}">
     <h3>${n.name} <span class="pill open" id="pill${i}">…</span></h3>
@@ -361,12 +581,40 @@ $('cards').innerHTML = CFG.nodes.map((n,i)=>`
     <button class="claim" id="btn${i}">Claim reward</button>
   </div>`).join('');
 
-// Bind clicks via listener (functions live in the try scope, not globally)
-CFG.nodes.forEach((n, i) => $('btn'+i).addEventListener('click', () => doClaim(i)));
+async function refreshDemo(){
+  const flags = await claimedFlags(CFG.nodes.map((_,i)=>i));
+  CFG.nodes.forEach((n,i)=>{
+    const done = flags[i];
+    $('card'+i).classList.toggle('claimed', done);
+    $('pill'+i).outerHTML = done
+      ? '<span class="pill ok" id="pill'+i+'">claimed ✓</span>'
+      : '<span class="pill open" id="pill'+i+'">open</span>';
+    $('btn'+i).disabled = done;
+    $('btn'+i).textContent = done ? 'Already claimed' : 'Claim reward';
+  });
+}
+CFG.nodes.forEach((n,i)=>{
+  $('btn'+i).addEventListener('click', async () => {
+    const kp = Keypair.fromSecretKey(Uint8Array.from(n.secret));
+    const sig = await claim(i, walletFromKeypair(kp), $('btn'+i));
+    if (sig){
+      const a = document.createElement('a');
+      a.className='txlink'; a.target='_blank';
+      a.href='https://explorer.solana.com/tx/'+sig+'?cluster=devnet';
+      a.textContent='↗ transaction in explorer';
+      $('card'+i).appendChild(a);
+      await refreshDemo();
+    }
+  });
+});
+$('demoBox').addEventListener('toggle', () => { if ($('demoBox').open) refreshDemo(); });
 
-refresh();
+/* ---------- init ---------- */
+(async () => { if (await refresh()) refreshDemo(); })();
 setInterval(refresh, 45000);
+
 }catch(e){ __showErr('startup: '+e.message); console.error(e); }
+
 </script>
 </body>
 </html>

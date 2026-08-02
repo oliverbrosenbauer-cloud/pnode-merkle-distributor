@@ -25,4 +25,12 @@ let h = fs.readFileSync(path.join(ROOT, 'web', 'claim-shell.html'), 'utf8');
 h = h.replace('<script>/*BUNDLE*/</script>', () => '<script>\n' + fs.readFileSync(bundlePath, 'utf8') + '\n</script>');
 h = h.replace('/*CONFIG*/', () => 'const CFG = ' + JSON.stringify(cfg) + ';');
 fs.writeFileSync(path.join(ROOT, 'web', 'claim-demo.html'), h);
-console.log('web/claim-demo.html gebaut (' + (h.length / 1024 | 0) + ' KB) — im Browser öffnen.');
+
+// Same page under docs/ so GitHub Pages can serve it as a public link
+const docs = path.join(ROOT, 'docs');
+if (!fs.existsSync(docs)) fs.mkdirSync(docs);
+fs.writeFileSync(path.join(docs, 'index.html'), h);
+
+console.log('gebaut (' + (h.length / 1024 | 0) + ' KB):');
+console.log('  web/claim-demo.html   → lokal im Browser öffnen');
+console.log('  docs/index.html       → wird von GitHub Pages veröffentlicht');

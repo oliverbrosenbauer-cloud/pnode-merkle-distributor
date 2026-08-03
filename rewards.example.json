@@ -1,32 +1,32 @@
 {
-  "_comment": "Eingabedaten: was ein Reward-Berechner (z.B. aus pod-Credits) ausspucken würde. In Produktion generiert dies ein Skript aus der Credits-API.",
-  "period": "2026-08",
+  "_comment": "Input data: what a reward calculator (in the real system: from pod credits) would produce. In production a script generates this from the credits API.",
+  "period": "2026-09",
   "decimals": 9,
   "nodes": [
     {
       "name": "Pnode1",
-      "credits": 132000,
-      "reward": 1320
+      "credits": 141000,
+      "reward": 1410
     },
     {
       "name": "Pnode2",
-      "credits": 104000,
-      "reward": 1040
+      "credits": 112000,
+      "reward": 1120
     },
     {
       "name": "Pnode3",
-      "credits": 81000,
-      "reward": 810
+      "credits": 88000,
+      "reward": 880
     },
     {
       "name": "Pnode4",
-      "credits": 97000,
-      "reward": 970
+      "credits": 103000,
+      "reward": 1030
     },
     {
       "name": "Pnode5",
-      "credits": 70000,
-      "reward": 700
+      "credits": 76000,
+      "reward": 760
     }
   ]
 }

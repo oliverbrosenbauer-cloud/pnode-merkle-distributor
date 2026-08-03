@@ -7,6 +7,7 @@ web/claim-demo.html
 # It embeds five devnet test keys (worthless play money) so the demo works
 # without setup. The project wallet in .keys/ is NOT in here.
 
-# Kommunikations-Entwürfe bleiben lokal, nicht im öffentlichen Repo
+# Outreach drafts stay local, not in the public repo
 MESSAGE_TO_BERNIE.md
 DISCORD_POST.md
+state.*.json

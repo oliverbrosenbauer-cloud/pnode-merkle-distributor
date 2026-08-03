@@ -72,12 +72,15 @@ Claim status is read with one batched `getMultipleAccounts` call per 100 recipie
 
 ```
 rewards.example.json   input: who earned what
+scripts/common.js      shared helpers (RPC, keys, state)
 scripts/1-keys.js      generate project + test wallets
 scripts/2-tree.js      build Merkle tree, compute root and proofs
 scripts/3-setup.js     mint token, create distributor, fund it
 scripts/4-claim.js     claim from the CLI
 scripts/5-page.js      assemble the standalone claim page
+scripts/web-entry.js   entry point for the browser bundle
 web/claim-shell.html   UI template
+docs/index.html        generated demo page, published via GitHub Pages
 ```
 
 ---

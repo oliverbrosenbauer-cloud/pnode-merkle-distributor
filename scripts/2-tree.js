@@ -1,5 +1,5 @@
-// Schritt 2: Merkle-Tree über alle Reward-Empfänger bauen.
-// Der Root ist der einzige Wert, der on-chain landet — er "versiegelt" die komplette Auszahlungsliste.
+// Step 2: build the Merkle tree over all reward recipients.
+// The root is the only value that goes on-chain — it seals the entire payout list.
 const { utils } = require('@saberhq/merkle-distributor');
 const { u64 } = require('@saberhq/token-utils');
 const { PublicKey } = require('@solana/web3.js');
@@ -20,8 +20,8 @@ const maxTotalClaim = balances.reduce((acc, b) => acc.add(b.amount), new u64(0))
 
 state({ root: Buffer.from(root).toString('hex'), proofs, maxTotalClaim: maxTotalClaim.toString(), maxNumNodes: s.nodes.length });
 
-console.log('Merkle-Root:   ' + Buffer.from(root).toString('hex'));
+console.log('Merkle root:   ' + Buffer.from(root).toString('hex'));
 console.log('maxTotalClaim: ' + maxTotalClaim.toString());
-console.log('Empfänger:     ' + s.nodes.length);
-console.log('\nJeder Empfänger bekommt einen "Proof" (Pfad im Baum) — damit beweist er beim Claim,');
-console.log('dass sein Betrag Teil des versiegelten Roots ist. Proof-Längen: ' + proofs.map(p => p.length).join(', '));
+console.log('Recipients:    ' + s.nodes.length);
+console.log('\nEach recipient gets a proof — the path through the tree — which proves at claim time');
+console.log('that their amount is part of the sealed root. Proof lengths: ' + proofs.map(p => p.length).join(', '));

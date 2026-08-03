@@ -1,4 +1,5 @@
-// Schritt 3: Dummy-Token minten, Distributor on-chain anlegen, Topf befüllen, Test-Wallets mit Gas versorgen.
+// Step 3: mint the dummy token, create the distributor on-chain, fund the pool,
+// and give each test wallet a little SOL for its claim transaction.
 const { PublicKey, LAMPORTS_PER_SOL, SystemProgram, Transaction, sendAndConfirmTransaction } = require('@solana/web3.js');
 const { createMint, mintTo } = require('@solana/spl-token');
 const { MerkleDistributorSDK } = require('@saberhq/merkle-distributor');
@@ -14,20 +15,20 @@ const { conn, loadKp, state } = require('./common.js');
   const bal = await c.getBalance(payer.publicKey);
   console.log('Payer:', payer.publicKey.toBase58(), '|', bal / LAMPORTS_PER_SOL, 'SOL');
   if (bal < 0.3 * LAMPORTS_PER_SOL) {
-    console.log('\nZU WENIG SOL. Hole Devnet-SOL für obige Adresse (faucet.solana.com) und starte erneut.');
+    console.log('\nNOT ENOUGH SOL. Fund the address above at faucet.solana.com and run again.');
     process.exit(2);
   }
 
-  // 1) Dummy-Token "XNDR" — steht stellvertretend für den echten Reward-Token
+  // 1) Dummy token "XNDR" — stands in for the real reward token
   let mint;
-  if (s.mint) { mint = new PublicKey(s.mint); console.log('Token existiert:', s.mint); }
+  if (s.mint) { mint = new PublicKey(s.mint); console.log('Token exists:', s.mint); }
   else {
     mint = await createMint(c, payer, payer.publicKey, null, s.decimals);
     state({ mint: mint.toBase58() });
-    console.log('Token XNDR erstellt:', mint.toBase58());
+    console.log('Token XNDR created:', mint.toBase58());
   }
 
-  // 2) Distributor-Account anlegen: speichert Merkle-Root + Obergrenzen on-chain
+  // 2) Create the distributor account: stores the Merkle root and the limits on-chain
   s = state();
   if (!s.distributor) {
     const provider = SolanaProvider.init({ connection: c, wallet: new SignerWallet(payer) });
@@ -40,28 +41,28 @@ const { conn, loadKp, state } = require('./common.js');
     });
     const rc = await pending.tx.confirm();
     state({ distributor: pending.distributor.toBase58(), distributorATA: pending.distributorATA.toBase58(), createTx: rc.signature });
-    console.log('Distributor angelegt:', pending.distributor.toBase58());
-    console.log('  Tx: https://explorer.solana.com/tx/' + rc.signature + '?cluster=devnet');
-  } else console.log('Distributor existiert:', s.distributor);
+    console.log('Distributor created:', pending.distributor.toBase58());
+    console.log('  tx: https://explorer.solana.com/tx/' + rc.signature + '?cluster=devnet');
+  } else console.log('Distributor exists:', s.distributor);
 
-  // 3) Reward-Topf befüllen
+  // 3) Fund the reward pool
   s = state();
   if (!s.funded) {
     await mintTo(c, payer, mint, new PublicKey(s.distributorATA), payer, BigInt(s.maxTotalClaim));
     state({ funded: true });
-    console.log('Topf befüllt:', Number(s.maxTotalClaim) / 10 ** s.decimals, 'XNDR');
-  } else console.log('Topf bereits befüllt.');
+    console.log('Pool funded:', Number(s.maxTotalClaim) / 10 ** s.decimals, 'XNDR');
+  } else console.log('Pool already funded.');
 
-  // 4) Test-Wallets brauchen etwas SOL für ihre Claim-Transaktion
+  // 4) Test wallets need a little SOL to pay for their own claim transaction
   s = state();
   if (!s.walletsFunded) {
     const tx = new Transaction();
     for (const n of s.nodes) tx.add(SystemProgram.transfer({ fromPubkey: payer.publicKey, toPubkey: new PublicKey(n.pubkey), lamports: 0.02 * LAMPORTS_PER_SOL }));
     await sendAndConfirmTransaction(c, tx, [payer]);
     state({ walletsFunded: true });
-    console.log('Test-Wallets mit je 0.02 SOL versorgt.');
-  } else console.log('Test-Wallets bereits versorgt.');
+    console.log('Test wallets funded with 0.02 SOL each.');
+  } else console.log('Test wallets already funded.');
 
-  console.log('\nSETUP KOMPLETT ✓   Rest:', await c.getBalance(payer.publicKey) / LAMPORTS_PER_SOL, 'SOL');
-  console.log('Distributor im Explorer: https://explorer.solana.com/address/' + state().distributor + '?cluster=devnet');
-})().catch(e => { console.error('FEHLER:', e.message); process.exit(1); });
+  console.log('\nSETUP COMPLETE ✓   remaining:', await c.getBalance(payer.publicKey) / LAMPORTS_PER_SOL, 'SOL');
+  console.log('Distributor in the explorer: https://explorer.solana.com/address/' + state().distributor + '?cluster=devnet');
+})().catch(e => { console.error('ERROR:', e.message); process.exit(1); });

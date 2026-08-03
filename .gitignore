@@ -6,3 +6,7 @@ web/claim-demo.html
 # docs/index.html is committed on purpose — it is the published demo page.
 # It embeds five devnet test keys (worthless play money) so the demo works
 # without setup. The project wallet in .keys/ is NOT in here.
+
+# Kommunikations-Entwürfe bleiben lokal, nicht im öffentlichen Repo
+MESSAGE_TO_BERNIE.md
+DISCORD_POST.md
